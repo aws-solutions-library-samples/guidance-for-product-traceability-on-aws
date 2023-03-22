@@ -1,4 +1,4 @@
-## My Project
+## Product Traceability on AWS - CDK Deployment
 
 TODO: Fill this README out!
 
