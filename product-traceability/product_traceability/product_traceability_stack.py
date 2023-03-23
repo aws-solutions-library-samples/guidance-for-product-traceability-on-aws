@@ -58,17 +58,20 @@ class ProductTraceabilityStack(Stack):
 
         # Create state machine state definitions
         validate_document = tasks.LambdaInvoke(self, "ValidateDocument", lambda_function = validation_lambda_function)
+        validation_choice = sfn.Choice(self, 'Is Document Valid?')
+        validation_fail_condition = sfn.Condition.boolean_equals("$.Payload.valid", False)
+        validation_fail = sfn.Fail(self, "Invalid", cause = "Document is not valid.", error="validate_document returned False")
         extract_information = tasks.LambdaInvoke(self, "ExtractData", lambda_function = extraction_lambda_function)
-        invalid_doc_fail = sfn.Fail(self, "Invalid", cause = "Document is not valid.", error="validate_document returned False")
+        extraction_choice = sfn.Choice(self, 'Extraction success?')
+        extraction_fail_condition = sfn.Condition.boolean_equals("$.Payload.success", False)
+        extraction_fail = sfn.Fail(self, "ExtractionFail", cause = "Exctraction was unsuccessful.", error="extract_information failed")
         success_state = sfn.Succeed(self, "Extraction Success")
         
         # Create flow definition
         flow_definition = validate_document.next(
-            sfn.Choice(self, 'Is Document Valid?').when(
-                sfn.Condition.boolean_equals("$.Payload.valid", False), invalid_doc_fail).otherwise(
-                extract_information.next(
-                success_state))
-        )
+            validation_choice.when(validation_fail_condition, validation_fail).otherwise(extract_information.next(
+            extraction_choice.when(extraction_fail_condition, extraction_fail).otherwise(success_state)
+        )))
 
         # Create state machine
         extraction_state_machine = sfn.StateMachine(self, "ExtractionStateMachine",

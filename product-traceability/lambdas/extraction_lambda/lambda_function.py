@@ -1,4 +1,8 @@
 # TODO: Implement basic extraction
 
 def lambda_handler(event, context):
-    print(event)
+    return_json = {
+        "success": True
+    }
+
+    return return_json
