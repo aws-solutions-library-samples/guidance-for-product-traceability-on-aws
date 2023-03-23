@@ -1,6 +1,12 @@
 
 # Welcome to your CDK Python project!
 
+- Activate venv
+- install requirements.txt
+- bootstrap
+- synth
+- deploy
+
 This is a blank project for CDK development with Python.
 
 The `cdk.json` file tells the CDK Toolkit how to execute your app.
