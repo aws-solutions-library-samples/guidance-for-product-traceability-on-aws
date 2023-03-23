@@ -90,6 +90,9 @@ class ProductTraceabilityStack(Stack):
         extract_information.add_catch(extraction_fail)
         # Call the document archival lambda
         archive_document = tasks.LambdaInvoke(self, "ArchiveDocument", lambda_function = archive_lambda_function)
+        # Archival fail state
+        archival_fail = sfn.Fail(self, "ArchivalFail", cause = "Check lambda permissions.", error="Object could not be moved to archive.")
+        archive_document.add_catch(archival_fail)
         # Success state
         success_state = sfn.Succeed(self, "Success")
         
