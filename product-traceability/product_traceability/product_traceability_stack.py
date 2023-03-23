@@ -45,13 +45,13 @@ class ProductTraceabilityStack(Stack):
         # Lambda function for file validation before extraction
         validation_lambda_function = aws_lambda.Function(self, "ValidationFunction",
             runtime = aws_lambda.Runtime.PYTHON_3_9,
-            handler = 'validation.lambda_handler',
+            handler = 'lambda_function.lambda_handler',
             code = aws_lambda.Code.from_asset('lambdas/validation_lambda')
         )
 
         # Lambda function for handling Textract calls and extraction logic.
         extraction_lambda_function = aws_lambda.Function(self, "ExtractionFunction",
             runtime = aws_lambda.Runtime.PYTHON_3_9,
-            handler = 'extraction.lambda_handler',
+            handler = 'lambda_function.lambda_handler',
             code=aws_lambda.Code.from_asset('lambdas/extraction_lambda')
         )
