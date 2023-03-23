@@ -56,22 +56,35 @@ class ProductTraceabilityStack(Stack):
             code=aws_lambda.Code.from_asset('lambdas/extraction_lambda')
         )
 
-        # Create state machine state definitions
+        # Lambda function for archiving file.
+        archive_lambda_function = aws_lambda.Function(self, "DocumentArchivalFunction",
+            runtime = aws_lambda.Runtime.PYTHON_3_9,
+            handler = 'lambda_function.lambda_handler',
+            code=aws_lambda.Code.from_asset('lambdas/archive_document_lambda')
+        )
+
+        ## Step function state definitions ##
+
+        # Call the document validation lambda
         validate_document = tasks.LambdaInvoke(self, "ValidateDocument", lambda_function = validation_lambda_function)
-        validation_choice = sfn.Choice(self, 'Is Document Valid?')
-        validation_fail_condition = sfn.Condition.boolean_equals("$.Payload.valid", False)
+        # Validation fail state
         validation_fail = sfn.Fail(self, "Invalid", cause = "Document is not valid.", error="validate_document returned False")
+        validate_document.add_catch(validation_fail)
+        # Call the document extraction lambda
         extract_information = tasks.LambdaInvoke(self, "ExtractData", lambda_function = extraction_lambda_function)
-        extraction_choice = sfn.Choice(self, 'Extraction success?')
-        extraction_fail_condition = sfn.Condition.boolean_equals("$.Payload.success", False)
+        # Extraction fail state
         extraction_fail = sfn.Fail(self, "ExtractionFail", cause = "Exctraction was unsuccessful.", error="extract_information failed")
-        success_state = sfn.Succeed(self, "Extraction Success")
+        extract_information.add_catch(extraction_fail)
+        # Call the document archival lambda
+        archive_document = tasks.LambdaInvoke(self, "ArchiveDocument", lambda_function = archive_lambda_function)
+        # Success state
+        success_state = sfn.Succeed(self, "Success")
         
         # Create flow definition
         flow_definition = validate_document.next(
-            validation_choice.when(validation_fail_condition, validation_fail).otherwise(extract_information.next(
-            extraction_choice.when(extraction_fail_condition, extraction_fail).otherwise(success_state)
-        )))
+            extract_information).next(
+            archive_document).next(
+            success_state)
 
         # Create state machine
         extraction_state_machine = sfn.StateMachine(self, "ExtractionStateMachine",
