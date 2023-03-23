@@ -6,7 +6,8 @@ from aws_cdk import (
     aws_stepfunctions as sfn,
     aws_stepfunctions_tasks as tasks,
     aws_events as events,
-    aws_events_targets as targets
+    aws_events_targets as targets,
+    aws_iam as iam
 )
 from constructs import Construct
 
@@ -61,6 +62,18 @@ class ProductTraceabilityStack(Stack):
             runtime = aws_lambda.Runtime.PYTHON_3_9,
             handler = 'lambda_function.lambda_handler',
             code=aws_lambda.Code.from_asset('lambdas/archive_document_lambda')
+        )
+        archive_lambda_function.add_to_role_policy(
+            iam.PolicyStatement(
+                actions=["s3:GetObject", "s3:DeleteObject"],
+                resources=[f'{document_bucket.bucket_arn}/landing/*']
+            )
+        )
+        archive_lambda_function.add_to_role_policy(
+            iam.PolicyStatement(
+                actions=["s3:PutObject"],
+                resources=[f'{document_bucket.bucket_arn}/archive/*']
+            )
         )
 
         ## Step function state definitions ##

@@ -1,3 +1,5 @@
+# TODO: Error handling for copy
+
 import boto3
 
 def lambda_handler(event, context):
@@ -9,10 +11,16 @@ def lambda_handler(event, context):
     filename = source_key.split('/')[-1]
 
     # Copy document to archive
-    response = s3.copy_object(
+    copy_response = s3.copy_object(
         Bucket = bucket,
-        CopySource = source_key,
-        Key = '/archive/'+filename,
+        CopySource = f'{bucket}/{source_key}',
+        Key = 'archive/'+filename,
     )
 
-    return response
+    # Delete old copy
+    delete_response = s3.delete_object(
+        Bucket = bucket,
+        Key = source_key
+    )
+    
+    return 1
