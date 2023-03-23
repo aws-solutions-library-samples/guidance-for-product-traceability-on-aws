@@ -48,3 +48,10 @@ class ProductTraceabilityStack(Stack):
             handler = 'validation.lambda_handler',
             code = aws_lambda.Code.from_asset('lambdas/validation_lambda')
         )
+
+        # Lambda function for handling Textract calls and extraction logic.
+        extraction_lambda_function = aws_lambda.Function(self, "ExtractionFunction",
+            runtime = aws_lambda.Runtime.PYTHON_3_9,
+            handler = 'extraction.lambda_handler',
+            code=aws_lambda.Code.from_asset('lambdas/extraction_lambda')
+        )
