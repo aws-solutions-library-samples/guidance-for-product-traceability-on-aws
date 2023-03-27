@@ -41,7 +41,8 @@ class ProductTraceabilityStack(Stack):
                     ]
                 )
             ],
-            event_bridge_enabled = True
+            event_bridge_enabled = True,
+            removal_policy=RemovalPolicy.DESTROY,
         )
 
         # Latest boto3 layer
@@ -64,7 +65,10 @@ class ProductTraceabilityStack(Stack):
             runtime = _lambda.Runtime.PYTHON_3_9,
             handler = 'lambda_function.lambda_handler',
             code=_lambda.Code.from_asset('lambdas/extraction_lambda'),
-            timeout=Duration.minutes(5)
+            timeout=Duration.minutes(5),
+            environment={
+                "DOCUMENT_BUCKET_NAME": document_bucket.bucket_name
+            }
         )
         extraction_lambda_function.add_layers(boto3_layer)
         extraction_lambda_function.add_to_role_policy(
@@ -75,8 +79,8 @@ class ProductTraceabilityStack(Stack):
         )
         extraction_lambda_function.add_to_role_policy(
             iam.PolicyStatement(
-                actions=["s3:GetObject"],
-                resources=[f'{document_bucket.bucket_arn}/landing/*']
+                actions=['s3:GetObject', 's3:PutObject'],
+                resources=[f'{document_bucket.bucket_arn}', f'{document_bucket.bucket_arn}/*']
             )
         )
 
