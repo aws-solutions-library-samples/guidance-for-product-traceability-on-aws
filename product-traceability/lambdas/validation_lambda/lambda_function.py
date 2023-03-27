@@ -1,10 +1,6 @@
 # This function houses validation logic.
 
-def lambda_handler(event, context):
-    if event['detail']['object']['key'].split('.')[-1] == 'pdf':
-        event['valid'] = True
-        
-    else:
-        event['valid'] = False
-    
+def lambda_handler(event, context):    
+    assert event['detail']['object']['key'].split('.')[-1] == 'pdf'
+
     return event

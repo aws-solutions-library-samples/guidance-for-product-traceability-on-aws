@@ -2,12 +2,13 @@ from aws_cdk import (
     Stack,
     Duration,
     aws_s3 as s3,
-    aws_lambda,
+    aws_lambda as _lambda,
     aws_stepfunctions as sfn,
     aws_stepfunctions_tasks as tasks,
     aws_events as events,
     aws_events_targets as targets,
-    aws_iam as iam
+    aws_iam as iam,
+    RemovalPolicy
 )
 from constructs import Construct
 
@@ -43,25 +44,47 @@ class ProductTraceabilityStack(Stack):
             event_bridge_enabled = True
         )
 
+        # Latest boto3 layer
+        boto3_layer = _lambda.LayerVersion(self, "Boto3Layer",
+            code=_lambda.Code.from_asset('lambdas/layers/boto3-layer.zip'),
+            compatible_runtimes=[_lambda.Runtime.PYTHON_3_9,_lambda.Runtime.PYTHON_3_8],
+            removal_policy=RemovalPolicy.DESTROY,
+            description="A layer to add the latest version of boto3 for textract queries."
+        )
+
         # Lambda function for file validation before extraction
-        validation_lambda_function = aws_lambda.Function(self, "ValidationFunction",
-            runtime = aws_lambda.Runtime.PYTHON_3_9,
+        validation_lambda_function = _lambda.Function(self, "ValidationFunction",
+            runtime = _lambda.Runtime.PYTHON_3_9,
             handler = 'lambda_function.lambda_handler',
-            code = aws_lambda.Code.from_asset('lambdas/validation_lambda')
+            code = _lambda.Code.from_asset('lambdas/validation_lambda')
         )
 
         # Lambda function for handling Textract calls and extraction logic.
-        extraction_lambda_function = aws_lambda.Function(self, "ExtractionFunction",
-            runtime = aws_lambda.Runtime.PYTHON_3_9,
+        extraction_lambda_function = _lambda.Function(self, "ExtractionFunction",
+            runtime = _lambda.Runtime.PYTHON_3_9,
             handler = 'lambda_function.lambda_handler',
-            code=aws_lambda.Code.from_asset('lambdas/extraction_lambda')
+            code=_lambda.Code.from_asset('lambdas/extraction_lambda'),
+            timeout=Duration.minutes(5)
+        )
+        extraction_lambda_function.add_layers(boto3_layer)
+        extraction_lambda_function.add_to_role_policy(
+            iam.PolicyStatement(
+                actions=["textract:*"],
+                resources=['*']
+            )
+        )
+        extraction_lambda_function.add_to_role_policy(
+            iam.PolicyStatement(
+                actions=["s3:GetObject"],
+                resources=[f'{document_bucket.bucket_arn}/landing/*']
+            )
         )
 
         # Lambda function for archiving file.
-        archive_lambda_function = aws_lambda.Function(self, "DocumentArchivalFunction",
-            runtime = aws_lambda.Runtime.PYTHON_3_9,
+        archive_lambda_function = _lambda.Function(self, "DocumentArchivalFunction",
+            runtime = _lambda.Runtime.PYTHON_3_9,
             handler = 'lambda_function.lambda_handler',
-            code=aws_lambda.Code.from_asset('lambdas/archive_document_lambda')
+            code=_lambda.Code.from_asset('lambdas/archive_document_lambda')
         )
         archive_lambda_function.add_to_role_policy(
             iam.PolicyStatement(
