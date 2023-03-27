@@ -9,7 +9,7 @@ def lambda_handler(event, context):
     detail = payload['detail']
 
     start_response = textract.start_document_analysis(
-        Document={
+        DocumentLocation={
             'S3Object': {
                 'Bucket': detail['bucket']['name'],
                 'Name': detail['object']['key']
@@ -21,7 +21,7 @@ def lambda_handler(event, context):
         QueriesConfig={
             'Queries': [
                 {
-                    'Text': 'When does this document expire?',
+                    'Text': 'Until when is this document valid?',
                     'Alias': 'expiration',
                     'Pages': [
                         '1',
@@ -30,6 +30,8 @@ def lambda_handler(event, context):
             ]
         }
     )
+
+    print(f'Job submitted. ID: {start_response["JobId"]}. Waiting for job to finish.')
     
     # Wait for job to finish
     get_response = textract.get_document_analysis(
@@ -37,10 +39,14 @@ def lambda_handler(event, context):
     )
     wait_time = 0
     while get_response['JobStatus'] == 'IN_PROGRESS':
-        wait_time += 1
-        time.sleep(wait_time)
+        sleep_time += 1
+        print(f'Job not done. Sleeping for {sleep_time}s.')
+        time.sleep(sleep_time)
         get_response = textract.get_document_analysis(
             JobId=start_response['JobId'],
         )
 
-    return get_response
+    # Log textract results
+    print(get_response)
+
+    return payload
