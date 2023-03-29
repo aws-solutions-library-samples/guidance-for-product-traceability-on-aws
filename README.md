@@ -1,11 +1,24 @@
 ## Product Traceability on AWS - CDK Deployment
 
-TODO: Fill this README out!
+## Install
+Create a virtual environment
+```bash
+> python3 -m venv .venv
+```
+Activate the environment on linux/macOS:
+```bash
+> source .venv/bin/activate
+```
+Activate the environment on windows:
+```bash
+> .venv\Scripts\activate.bat
+```
 
-Be sure to:
-
-* Change the title in this README
-* Edit your repository description on GitHub
+## Deploy the Solution
+Start by installing the requirements in your virtual environment
+```bash
+> pip install -r requirements.txt
+```
 
 ## Security
 
