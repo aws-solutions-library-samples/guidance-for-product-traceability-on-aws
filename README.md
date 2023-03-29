@@ -1,11 +1,10 @@
 ## Product Traceability on AWS - CDK Deployment
 
-TODO: Fill this README out!
-
-Be sure to:
-
-* Change the title in this README
-* Edit your repository description on GitHub
+## Install
+Create a virtual environment
+```bash
+> python3 -m venv .venv
+```
 
 ## Security
 
