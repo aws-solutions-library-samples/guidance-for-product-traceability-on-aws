@@ -41,7 +41,8 @@ class ProductTraceabilityStack(Stack):
                     ]
                 )
             ],
-            event_bridge_enabled = True
+            event_bridge_enabled = True,
+            block_public_access = True,
         )
 
         # Latest boto3 layer
