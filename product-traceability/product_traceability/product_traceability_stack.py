@@ -19,7 +19,7 @@ class ProductTraceabilityStack(Stack):
 
         # Bucket for documents. 
         # Includes lifecycle rules for long term archival - safe to remove "transitions" parameter
-        # Note: EventBridge enabled required
+        # Note: EventBridge enabled required. Bucket will NOT be deleted when running 'cdk destroy'
         document_bucket = s3.Bucket(self, "DocumentBucket",
             lifecycle_rules = [
                 s3.LifecycleRule(
@@ -41,7 +41,7 @@ class ProductTraceabilityStack(Stack):
                     ]
                 )
             ],
-            event_bridge_enabled = True,
+            event_bridge_enabled = True
         )
 
         # Latest boto3 layer
@@ -49,7 +49,7 @@ class ProductTraceabilityStack(Stack):
             code=_lambda.Code.from_asset('lambdas/layers/boto3-layer.zip'),
             compatible_runtimes=[_lambda.Runtime.PYTHON_3_9],
             removal_policy=RemovalPolicy.DESTROY,
-            description="A layer to add the latest version of boto3 for textract queries."
+            description="A layer to add the latest version of boto3 for textract queries functionality."
         )
         # Textract response parser and textract caller layer
         textract_layers = _lambda.LayerVersion(self, "TextractCallersLayer",
@@ -63,7 +63,8 @@ class ProductTraceabilityStack(Stack):
         validation_lambda_function = _lambda.Function(self, "ValidationFunction",
             runtime = _lambda.Runtime.PYTHON_3_9,
             handler = 'validation.lambda_handler',
-            code = _lambda.Code.from_asset('lambdas/validation_lambda')
+            code = _lambda.Code.from_asset('lambdas/validation_lambda'),
+            description='A lambda function to validate documents before extraction.'
         )
 
         # Lambda function for handling Textract calls and extraction logic.
@@ -74,7 +75,8 @@ class ProductTraceabilityStack(Stack):
             timeout=Duration.minutes(5),
             environment={
                 "DOCUMENT_BUCKET_NAME": document_bucket.bucket_name
-            }
+            },
+            description='A lambda function to extract data from certificates, using Textract.'
         )
         extraction_lambda_function.add_layers(boto3_layer)
         extraction_lambda_function.add_layers(textract_layers)
@@ -95,7 +97,8 @@ class ProductTraceabilityStack(Stack):
         archive_lambda_function = _lambda.Function(self, "DocumentArchivalFunction",
             runtime = _lambda.Runtime.PYTHON_3_9,
             handler = 'archival.lambda_handler',
-            code=_lambda.Code.from_asset('lambdas/archive_document_lambda')
+            code=_lambda.Code.from_asset('lambdas/archive_document_lambda'),
+            description='A lambda function move certificates to archive directory, where lifecycle rules are applied.'
         )
         archive_lambda_function.add_to_role_policy(
             iam.PolicyStatement(
