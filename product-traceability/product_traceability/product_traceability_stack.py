@@ -42,7 +42,7 @@ class ProductTraceabilityStack(Stack):
                 )
             ],
             event_bridge_enabled = True,
-            block_public_access = True,
+            block_public_access = s3.BlockPublicAccess.BLOCK_ALL,
         )
 
         # Latest boto3 layer
