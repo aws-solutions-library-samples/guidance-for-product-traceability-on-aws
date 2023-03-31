@@ -34,15 +34,11 @@ def lambda_handler(event, context):
         for x in query_answers:
             output_data[x[1]] = x[2]
     
-    # Write and upload results
-    with open('/tmp/result.json', 'w') as f:
-        json.dump(output_data, f)
-        
-    s3 = boto3.client('s3')
-    s3.upload_file(
-        '/tmp/result.json',
-        os.environ['DOCUMENT_BUCKET_NAME'],
-        'extracted-data/output.json'
+    # Upload results
+    s3 = boto3.resource('s3')
+    s3object = s3.Object(os.environ['BUCKET_NAME'], 'output.json')
+    s3object.put(
+        Body=(bytes(json.dumps(output_data).encode('UTF-8')))
     )
     
     return payload
