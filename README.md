@@ -2,6 +2,11 @@
 It is recommended that the following steps are followed in an AWS Cloud9 environment. This will allow for easiest deployment as AWS CDK will already be installed.
 Alternatively, follow the [CDK installation instructions](https://docs.aws.amazon.com/cdk/v2/guide/getting_started.html).
 ## Quickstart
+### Clone the Repository
+After cloning the repository, navigate into the CDK folder.
+```bash
+> cd guidance-for-product-traceability-on-aws/product-traceability
+```
 ### Set up the Environment
 Create a virtual environment
 ```bash
