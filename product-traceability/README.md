@@ -1,5 +1,5 @@
 
-# Welcome to your CDK Python project!
+# CDK Project Instructions
 
 - Activate venv
 - install requirements.txt
