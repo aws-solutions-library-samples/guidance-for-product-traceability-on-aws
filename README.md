@@ -1,5 +1,6 @@
 # Product Traceability on AWS - CDK Deployment
-It is recommended that the following steps are followed in an AWS Cloud9 environment. This will allow for easiest stack deployment.
+It is recommended that the following steps are followed in an AWS Cloud9 environment. This will allow for easiest deployment as AWS CDK will already be installed.
+Alternatively, follow the [https://docs.aws.amazon.com/cdk/v2/guide/getting_started.html](CDK installation instructions).
 ## Quickstart
 ### Set up the Environment
 Create a virtual environment
@@ -19,6 +20,14 @@ Activate the environment on windows:
 Start by installing the requirements in your virtual environment
 ```bash
 > pip install -r requirements.txt
+```
+Run bootstrap in order to provision resources for the CDK solution
+```bash
+> cdk bootstrap
+```
+Deploy the solution
+```bash
+> cdk deploy
 ```
 
 ## Security
