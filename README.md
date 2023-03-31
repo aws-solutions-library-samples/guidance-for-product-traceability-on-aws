@@ -1,5 +1,5 @@
 ## Product Traceability on AWS - CDK Deployment
-
+It is recommended that the following steps are followed in an AWS Cloud9 environment. This will allow for easiest stack deployment.
 ## Install
 Create a virtual environment
 ```bash

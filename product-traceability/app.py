@@ -8,6 +8,7 @@ from product_traceability.product_traceability_stack import ProductTraceabilityS
 
 app = cdk.App()
 ProductTraceabilityStack(app, "ProductTraceabilityStack",
+    description="Guidance for Product Traceability on AWS (INSERT_ID)"
     # If you don't specify 'env', this stack will be environment-agnostic.
     # Account/Region-dependent features and context lookups will not work,
     # but a single synthesized template can be deployed anywhere.

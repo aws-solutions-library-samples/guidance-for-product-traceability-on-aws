@@ -42,7 +42,6 @@ class ProductTraceabilityStack(Stack):
                 )
             ],
             event_bridge_enabled = True,
-            removal_policy=RemovalPolicy.DESTROY,
         )
 
         # Latest boto3 layer
