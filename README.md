@@ -62,7 +62,7 @@ If you want to free up resources, run the following command:
 ```bash
 cdk destroy
 ```
-NOTE: This will **NOT** destroy the deployed S3 bucket. You will need to empty and delete the bucket manually.
+NOTE: This will **NOT** destroy the deployed S3 bucket. You will need to empty and delete the bucket through the console.
 
 ## Security
 
