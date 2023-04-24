@@ -52,7 +52,7 @@ cdk deploy
 ```
 ### Test the Solution
 Extraction is triggered by uploading a file to the newly created S3 bucket, with a prefix 'landing/'. This is to say, uploading anything to the landing "folder" will trigger the step function. Included in this repo is a file called "Mock Dock.pdf", which can be used to test the soltion. Expected behaviour is:
-- File uploaded to landing/
+- File uploaded to 'landing/'
 - Step function is triggered
 - Step function completes
 - Data is exported to S3 bucket with prefix 'data/'
