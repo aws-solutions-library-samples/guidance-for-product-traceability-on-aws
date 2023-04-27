@@ -149,9 +149,6 @@ class ProductTraceabilityStack(Stack):
                         "key": [
                             {
                                 "prefix": "landing/"
-                            },
-                            {
-                                "suffix": ".pdf"
                             }
                         ]
                     }
