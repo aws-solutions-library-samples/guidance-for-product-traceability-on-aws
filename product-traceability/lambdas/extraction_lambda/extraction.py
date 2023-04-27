@@ -74,11 +74,9 @@ def lambda_handler(event, context):
                 output_dict['queries'][q['Query']['Alias']]['confidence'] = qr['Confidence']
                 
     
-    output_filename = 'data'
-    
     # Upload results
     s3 = boto3.resource('s3')
-    s3object = s3.Object(os.environ['DOCUMENT_BUCKET_NAME'], f'data/{output_filename}_results.json')
+    s3object = s3.Object(os.environ['DOCUMENT_BUCKET_NAME'], f'data/demo_results.json')
     s3object.put(
         Body=(bytes(json.dumps(output_dict, indent=4, sort_keys=True).encode('UTF-8')))
     )
