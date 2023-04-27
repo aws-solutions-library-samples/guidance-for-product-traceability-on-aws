@@ -52,13 +52,6 @@ class ProductTraceabilityStack(Stack):
             removal_policy=RemovalPolicy.DESTROY,
             description="A layer to add the latest version of boto3 for textract queries functionality."
         )
-        # Textract response parser and textract caller layer
-        textract_layers = _lambda.LayerVersion(self, "TextractCallersLayer",
-            code=_lambda.Code.from_asset('lambdas/layers/textract-callers-layer.zip'),
-            compatible_runtimes=[_lambda.Runtime.PYTHON_3_9],
-            removal_policy=RemovalPolicy.DESTROY,
-            description="A layer to add textract caller and textract response parser"
-        )
 
         # Lambda function for file validation before extraction
         validation_lambda_function = _lambda.Function(self, "ValidationFunction",
@@ -80,7 +73,6 @@ class ProductTraceabilityStack(Stack):
             description='A lambda function to extract data from certificates, using Textract.'
         )
         extraction_lambda_function.add_layers(boto3_layer)
-        extraction_lambda_function.add_layers(textract_layers)
         extraction_lambda_function.add_to_role_policy(
             iam.PolicyStatement(
                 actions=["textract:*"],
@@ -154,7 +146,11 @@ class ProductTraceabilityStack(Stack):
                 detail_type = ["Object Created"],
                 detail = {
                     "object": {
-                        "key": [{"prefix": "landing/"}]
+                        "key": [
+                            {
+                                "prefix": "landing/"
+                            },
+                        ]
                     }
                 }
             )

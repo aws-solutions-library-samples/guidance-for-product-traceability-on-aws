@@ -1,9 +1,8 @@
 import boto3
 import os
-import textractcaller as tc
-import trp.trp2 as t2
 import json
 from datetime import datetime
+import time
 
 def lambda_handler(event, context):
     payload = event['Payload']
@@ -11,42 +10,77 @@ def lambda_handler(event, context):
     textract = boto3.client('textract')
     detail = payload['detail']
     
-    # Define queries
-    queries = [
-        tc.Query(text='What is the certificate number at the bottom of the page?', alias='CERT_NO', pages=['1']),
-        tc.Query(text='Until when is this document valid?', alias='EXPIRATION', pages=['1']),
-        tc.Query(text='When was this document issued?', alias='ISSUE_DATE', pages=['1']),
-    ]
-    
-    textract_response = tc.call_textract(
-        input_document=f's3://{detail["bucket"]["name"]}/{detail["object"]["key"]}',
-        queries_config=tc.QueriesConfig(queries=queries),
-        features=[tc.Textract_Features.QUERIES],
-        force_async_api=True,
-        boto3_textract_client=textract
+    # Start the document analysis job
+    response = textract.start_document_analysis(
+        DocumentLocation={
+            'S3Object': {
+                'Bucket': detail['bucket']['name'],
+                'Name': detail['object']['key']
+            }
+        },
+        FeatureTypes=['TABLES', 'QUERIES'],
+        QueriesConfig={
+            'Queries': [
+                {
+                    'Text': 'Until when is this document valid?',
+                    'Alias': 'expiry_date',
+                    'Pages': ['1']
+                },
+                {
+                    'Text': 'Who is the certification body?',
+                    'Alias': 'cert_body',
+                    'Pages': ['1']
+                },
+                {
+                    'Text': 'When was this document issued?',
+                    'Alias': 'issue_date',
+                    'Pages': ['1']
+                },
+                {
+                    'Text': 'What is the certificate number?',
+                    'Alias': 'cert_number',
+                    'Pages': ['1']
+                },
+            ]
+        }
     )
     
-    t_doc = t2.TDocumentSchema().load(textract_response)
+    # Get the job ID from the response
+    job_id = response['JobId']
     
-    output_data = {}
+    # Wait for the job to complete using a waiter
+    result = textract.get_document_analysis(JobId=job_id)
+    while result['JobStatus'] not in ['SUCCEEDED', 'FAILED']:
+        time.sleep(5)
+        result = textract.get_document_analysis(JobId=job_id)
     
-    for page in t_doc.pages:
-        query_answers = t_doc.get_query_answers(page=page)
-        for x in query_answers:
-            output_data[x[1]] = x[2]
+    output_dict = {}
+    output_dict['queries'] = {}
     
-    # Try to use cert number as output filename
-    try:
-        filename = output_data['CERT_NO']
-    # Otherwise use date & time of upload
-    except:
-        filename = str(datetime.now()).replace(' ', '-')
+    # Parse the query responses by matching queries with answers
+    queries = []
+    query_results = []
+    for block in result['Blocks']:
+        if block['BlockType'] == 'QUERY':
+            queries.append(block)
+        elif block['BlockType'] == 'QUERY_RESULT':
+            query_results.append(block)
+    for q in queries:
+        for qr in query_results:
+            if q['Relationships'][0]['Ids'][0] == qr['Id']:
+                output_dict['queries'][q['Query']['Alias']] = {}
+                output_dict['queries'][q['Query']['Alias']]['question'] = q['Query']['Text']
+                output_dict['queries'][q['Query']['Alias']]['answer'] = qr['Text']
+                output_dict['queries'][q['Query']['Alias']]['confidence'] = qr['Confidence']
+                
+    
+    output_filename = 'data'
     
     # Upload results
     s3 = boto3.resource('s3')
-    s3object = s3.Object(os.environ['DOCUMENT_BUCKET_NAME'], f'data/{filename}.json')
+    s3object = s3.Object(os.environ['DOCUMENT_BUCKET_NAME'], f'data/{output_filename}_results.json')
     s3object.put(
-        Body=(bytes(json.dumps(output_data).encode('UTF-8')))
+        Body=(bytes(json.dumps(output_dict, indent=4, sort_keys=True).encode('UTF-8')))
     )
     
     return payload
