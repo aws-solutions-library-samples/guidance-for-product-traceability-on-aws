@@ -57,6 +57,7 @@ Extraction is triggered by uploading a file to the newly created S3 bucket, with
 - Step function completes
 - Data is exported to S3 bucket with prefix 'data/'
 - Certificate is archived with prefix 'archive/'
+Note: Creating the 'landing/' folder will trigger the step-function. This is expected behaviour. The function will fail immediately, and cause no changes.
 ### Destroy the Solution
 If you want to free up resources, run the following command:
 ```bash
